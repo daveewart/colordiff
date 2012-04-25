@@ -239,6 +239,8 @@ sub parse_and_print {
     my $diffy_sep_col  = shift;
     my $inside_oldtext = 1;
 
+    $type eq 'wdiff' and @input = (join '', @input);
+
     foreach (@input) {
         if ( $type eq 'diff' ) {
             given ($_) {
