@@ -161,12 +161,14 @@ sub detect_diff_type {
 my $enable_verifymode;
 my $specified_difftype;
 my $enable_fakeexitcode;
+my $colormode = "auto";
 GetOptions(
     # --enable-verifymode option is for testing behaviour of colordiff
     # against standard test diffs
     "verifymode" => \$enable_verifymode,
     "fakeexitcode" => \$enable_fakeexitcode,
-    "difftype=s" => \$specified_difftype
+    "difftype=s" => \$specified_difftype,
+    "color=s" => \$colormode
     # TODO - check that specified type is valid, issue warning if not
 );
 
@@ -255,9 +257,16 @@ foreach $config_file (@config_files) {
     }
 }
 
-# If output is to a file, switch off colours, unless 'color_patch' is set
+# --color=yes and --color=no will override the color_patches setting
+if ($colormode eq "yes") {
+    $color_patch = 1;
+} elsif ($colormode eq "no") {
+    $color_patch = 0;
+}
+
+# If output is not a terminal, switch off colours, unless 'color_patch' is set
 # Relates to http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=378563
-if ((-f STDOUT) && ($color_patch == 0)) {
+if ((! -t 1) && ($color_patch == 0)) {
     $plain_text  = '';
     $file_old    = '';
     $file_new    = '';

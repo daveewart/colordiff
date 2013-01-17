@@ -4,9 +4,10 @@
 # colordiff output
 banner=no
 # By default, when colordiff output is being redirected
-# to a file, it detects this and does not colour-highlight
-# To make the patch file *include* colours, change the option
-# below to 'yes'
+# to a file or being piped out to other program, it detects
+# this and does not colour-highlight. To make the patch file
+# *include* colours, change the option below to 'yes'.  You
+# can also use the --color=yes|no option to overide this
 color_patches=no
 # Sometimes it can be useful to specify which diff command to
 # use: that can be specified here

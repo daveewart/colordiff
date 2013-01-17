@@ -32,12 +32,12 @@ For example:
 $ colordiff file1 file2
 $ diff -u file1 file2 | colordiff
 
-You can pipe the output to 'less', using the '-R' option (some systems or
-terminal types may get better results using '-r' instead), which keeps the
-colour escape sequences, otherwise displayed incorrectly or discarded by
-'less':
+With option '--color=yes', you can pipe the colorful output to 'less', using the
+'-R' option (some systems or terminal types may get better results using '-r'
+instead), which keeps the colour escape sequences, otherwise displayed
+incorrectly or discarded by 'less':
 
-$ diff -u file1 file2 | colordiff | less -R
+$ diff -u file1 file2 | colordiff --color=yes | less -R
 
 If you have wdiff installed, colordiff will correctly colourise the added and
 removed text, provided that the '-n' option is given to wdiff:
@@ -66,7 +66,7 @@ function cvsdiff () { cvs diff $@ | colordiff; }
 
 Or, combining the idea above using 'less':
 
-function cvsdiff () { cvs diff $@ | colordiff |less -R; }
+function cvsdiff () { cvs diff $@ | colordiff --color=yes |less -R; }
 
 Note that the function name, cvsdiff, can be customized.
 
