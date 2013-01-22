@@ -39,6 +39,12 @@ colour escape sequences, otherwise displayed incorrectly or discarded by
 
 $ diff -u file1 file2 | colordiff | less -R
 
+Note above example assumes you set 'color_patches=yes' in your colordiffrc file
+if it exists, if you want to force disable colour escape sequences (for example
+pipe the output to patch(1)), you can use option '--color=no' to do that.
+
+$ diff -u file1 file2 | colordiff --color=no | patch -p0 -d another-working-dir
+
 If you have wdiff installed, colordiff will correctly colourise the added and
 removed text, provided that the '-n' option is given to wdiff:
 
