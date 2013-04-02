@@ -277,6 +277,10 @@ if ((-f STDOUT) && ($color_patch == 0)) {
     $colour{off} = '';
 }
 
+# Disable output buffering. This allows "producer | colordiff | less" to output
+# earlier without having to wait for 'producer' to finish.
+select STDOUT;
+$| = 1;
 
 # ----------------------------------------------------------------------------
 
