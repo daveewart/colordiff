@@ -23,7 +23,6 @@
 
 use strict;
 use Getopt::Long qw(:config pass_through no_auto_abbrev);
-use IPC::Open2;
 
 my $app_name     = 'colordiff';
 my $version      = '1.0.13';
@@ -92,7 +91,7 @@ sub check_for_file_arguments {
             $ddash = 1;
             next;
         }
-        if ($ddash) {
+        if ($ddash || $arg eq "-") {
             $nonopts++;
             next;
         }
@@ -297,11 +296,13 @@ if (check_for_file_arguments (@ARGV)) {
 
 my @inputstream;
 
+my $inputhandle;
 my $pid;
 if ($operating_methodology == 1) {
     # Feed stdin of colordiff with output from the diff program
-    close(STDIN);
-    $pid = open2(\*STDIN, undef, "$diff_cmd", @ARGV);
+    $pid = open($inputhandle, "-|", "$diff_cmd", @ARGV);
+} else {
+    $inputhandle = \*STDIN;
 }
 
 # Input stream has been read - need to examine it
@@ -313,14 +314,14 @@ my $record;
 if (defined $specified_difftype) {
     $diff_type = $specified_difftype;
     # diffy needs at least one line to look at
-    if ($diff_type eq 'diffy' and ($_ = <STDIN>)) {
+    if ($diff_type eq 'diffy' and ($_ = <$inputhandle>)) {
         push @inputstream, $_;
     }
     $lastline = $_;
 }
 else {
     # Detect diff type, diffy is permitted
-    while (<STDIN>) {
+    while (<$inputhandle>) {
         push @inputstream, $_;
         $diff_type = detect_diff_type($_, 1);
         last if $diff_type ne 'unknown';
@@ -390,7 +391,7 @@ if ($diff_type eq 'diffy') {
                 $diff_type = detect_diff_type($_, 0);
                 last;
             }
-            if (defined ($_ = <STDIN>)) {
+            if (defined ($_ = <$inputhandle>)) {
                 push @checkbuffer, $_;
             }
             $lastline = $_;
@@ -419,7 +420,7 @@ if ($diff_type eq 'diffy') {
 }
 # ------------------------------------------------------------------------------
 
-while (defined( $_ = @inputstream ? shift @inputstream : ($lastline and <STDIN>) )) {
+while (defined( $_ = @inputstream ? shift @inputstream : ($lastline and <$inputhandle>) )) {
     if ($diff_type eq 'diff') {
         if (/^</) {
             print "$file_old";
