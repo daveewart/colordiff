@@ -31,14 +31,14 @@
 [1;31m--- a/Makefile[0;0m
 [1;34m+++ b/Makefile[0;0m
 [1;35m@@ -52,5 +52,8 @@ dist:[0;0m
-[1;37m        tar -zcvf ${TARBALL} ${TMPDIR}[0;0m
-[1;37m        rm -fR ${TMPDIR}[0;0m
+[1;37m 	tar -zcvf ${TARBALL} ${TMPDIR}[0;0m
+[1;37m 	rm -fR ${TMPDIR}[0;0m
 [1;37m [0;0m
 [1;34m+gitclean:[0;0m
-[1;34m+       rm -f colordiff.1 colordiff.html cdiff.1[0;0m
+[1;34m+	rm -f colordiff.1 colordiff.html cdiff.1[0;0m
 [1;34m+[0;0m
 [1;37m clean:[0;0m
-[1;37m        rm -f README colordiff.1 colordiff.html cdiff.1[0;0m
+[1;37m 	rm -f README colordiff.1 colordiff.html cdiff.1[0;0m
 [1;32mdiff --git a/README b/README[0;0m
 [1;37mindex 75205da..830a153 100644[0;0m
 [1;31m--- a/README[0;0m

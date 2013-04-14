@@ -1,0 +1,150 @@
+------------------------------------------------------------------------
+r174813 | void | 2013-02-09 16:48:49 +0100 (Sat, 09 Feb 2013) | 16 lines
+
+TEMPORARY SYNTAX CHANGE!
+
+The original syntax for the attribute groups was ambiguous. For example:
+
+    declare void @foo() #1
+    #0 = attributes { noinline }
+
+The '#0' would be parsed as an attribute reference for '@foo' and not as a
+top-level entity. In order to continue forward while waiting for a decision on
+what the correct syntax is, I'm changing it to this instead:
+
+     declare void @foo() #1
+     attributes #0 = { noinline }
+
+Repeat: This is TEMPORARY until we decide what the correct syntax should be.
+
+
+Index: lib/AsmParser/LLParser.cpp
+===================================================================
+--- lib/AsmParser/LLParser.cpp	(revision 174812)
++++ lib/AsmParser/LLParser.cpp	(revision 174813)
+@@ -233,7 +233,6 @@
+     case lltok::GlobalVar:  if (ParseNamedGlobal()) return true; break;
+     case lltok::exclaim:    if (ParseStandaloneMetadata()) return true; break;
+     case lltok::MetadataVar:if (ParseNamedMetadata()) return true; break;
+-    case lltok::AttrGrpID:  if (ParseUnnamedAttrGrp()) return true; break;
+ 
+     // The Global variable production with no name can have many different
+     // optional leading prefixes, the production is:
+@@ -279,6 +278,8 @@
+     case lltok::kw_global:        // GlobalType
+       if (ParseGlobal("", SMLoc(), 0, false, 0)) return true;
+       break;
++
++    case lltok::kw_attributes: if (ParseUnnamedAttrGrp()) return true; break;
+     }
+   }
+ }
+@@ -800,16 +801,18 @@
+ }
+ 
+ /// ParseUnnamedAttrGrp
+-///   ::= AttrGrpID '=' '{' AttrValPair+ '}'
++///   ::= 'attributes' AttrGrpID '=' '{' AttrValPair+ '}'
+ bool LLParser::ParseUnnamedAttrGrp() {
++  assert(Lex.getKind() == lltok::kw_attributes);
++  LocTy AttrGrpLoc = Lex.getLoc();
++  Lex.Lex();
++
+   assert(Lex.getKind() == lltok::AttrGrpID);
+-  LocTy AttrGrpLoc = Lex.getLoc();
+   unsigned VarID = Lex.getUIntVal();
+   std::vector<unsigned> unused;
+   Lex.Lex();
+ 
+   if (ParseToken(lltok::equal, "expected '=' here") ||
+-      ParseToken(lltok::kw_attributes, "expected 'attributes' keyword here") ||
+       ParseToken(lltok::lbrace, "expected '{' here") ||
+       ParseFnAttributeValuePairs(NumberedAttrBuilders[VarID], unused, true) ||
+       ParseToken(lltok::rbrace, "expected end of attribute group"))
+
+------------------------------------------------------------------------
+r174812 | void | 2013-02-09 16:42:51 +0100 (Sat, 09 Feb 2013) | 4 lines
+
+Add a DenseMapInfo class for the AttributeSet.
+
+We are going to place the AttributeSet into a DenseMap during assembly writing.
+
+
+Index: include/llvm/IR/Attributes.h
+===================================================================
+--- include/llvm/IR/Attributes.h	(revision 174811)
++++ include/llvm/IR/Attributes.h	(revision 174812)
+@@ -185,6 +185,26 @@
+ 
+ //===----------------------------------------------------------------------===//
+ /// \class
++/// \brief Provide DenseMapInfo for Attribute::AttrKinds. This is used by
++/// AttrBuilder.
++template<> struct DenseMapInfo<Attribute::AttrKind> {
++  static inline Attribute::AttrKind getEmptyKey() {
++    return Attribute::AttrKindEmptyKey;
++  }
++  static inline Attribute::AttrKind getTombstoneKey() {
++    return Attribute::AttrKindTombstoneKey;
++  }
++  static unsigned getHashValue(const Attribute::AttrKind &Val) {
++    return Val * 37U;
++  }
++  static bool isEqual(const Attribute::AttrKind &LHS,
++                      const Attribute::AttrKind &RHS) {
++    return LHS == RHS;
++  }
++};
++
++//===----------------------------------------------------------------------===//
++/// \class
+ /// \brief This class holds the attributes for a function, its return value, and
+ /// its parameters. You access the attributes for each of them via an index into
+ /// the AttributeSet object. The function attributes are at index
+@@ -200,6 +220,7 @@
+ private:
+   friend class AttrBuilder;
+   friend class AttributeSetImpl;
++  template <typename Ty> friend struct DenseMapInfo;
+ 
+   /// \brief The attributes that we are managing. This can be null to represent
+   /// the empty attributes list.
+@@ -339,22 +360,23 @@
+ 
+ //===----------------------------------------------------------------------===//
+ /// \class
+-/// \brief Provide DenseMapInfo for Attribute::AttrKinds. This is used by
+-/// AttrBuilder.
+-template<> struct DenseMapInfo<Attribute::AttrKind> {
+-  static inline Attribute::AttrKind getEmptyKey() {
+-    return Attribute::AttrKindEmptyKey;
++/// \brief Provide DenseMapInfo for AttributeSet.
++template<> struct DenseMapInfo<AttributeSet> {
++  static inline AttributeSet getEmptyKey() {
++    uintptr_t Val = static_cast<uintptr_t>(-1);
++    Val <<= PointerLikeTypeTraits<void*>::NumLowBitsAvailable;
++    return AttributeSet(reinterpret_cast<AttributeSetImpl*>(Val));
+   }
+-  static inline Attribute::AttrKind getTombstoneKey() {
+-    return Attribute::AttrKindTombstoneKey;
++  static inline AttributeSet getTombstoneKey() {
++    uintptr_t Val = static_cast<uintptr_t>(-2);
++    Val <<= PointerLikeTypeTraits<void*>::NumLowBitsAvailable;
++    return AttributeSet(reinterpret_cast<AttributeSetImpl*>(Val));
+   }
+-  static unsigned getHashValue(const Attribute::AttrKind &Val) {
+-    return Val * 37U;
++  static unsigned getHashValue(AttributeSet AS) {
++    return (unsigned((uintptr_t)AS.pImpl) >> 4) ^
++           (unsigned((uintptr_t)AS.pImpl) >> 9);
+   }
+-  static bool isEqual(const Attribute::AttrKind &LHS,
+-                      const Attribute::AttrKind &RHS) {
+-    return LHS == RHS;
+-  }
++  static bool isEqual(AttributeSet LHS, AttributeSet RHS) { return LHS == RHS; }
+ };
+ 
+ //===----------------------------------------------------------------------===//
+
+------------------------------------------------------------------------

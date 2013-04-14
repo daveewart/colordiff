@@ -1,0 +1,150 @@
+[1;31m------------------------------------------------------------------------[0;0m
+[1;37mr174813 | void | 2013-02-09 16:48:49 +0100 (Sat, 09 Feb 2013) | 16 lines[0;0m
+[1;37m[0;0m
+[1;37mTEMPORARY SYNTAX CHANGE![0;0m
+[1;37m[0;0m
+[1;37mThe original syntax for the attribute groups was ambiguous. For example:[0;0m
+[1;37m[0;0m
+[1;37m    declare void @foo() #1[0;0m
+[1;37m    #0 = attributes { noinline }[0;0m
+[1;37m[0;0m
+[1;37mThe '#0' would be parsed as an attribute reference for '@foo' and not as a[0;0m
+[1;37mtop-level entity. In order to continue forward while waiting for a decision on[0;0m
+[1;37mwhat the correct syntax is, I'm changing it to this instead:[0;0m
+[1;37m[0;0m
+[1;37m     declare void @foo() #1[0;0m
+[1;37m     attributes #0 = { noinline }[0;0m
+[1;37m[0;0m
+[1;37mRepeat: This is TEMPORARY until we decide what the correct syntax should be.[0;0m
+[1;37m[0;0m
+[1;37m[0;0m
+[1;32mIndex: lib/AsmParser/LLParser.cpp[0;0m
+[1;32m===================================================================[0;0m
+[1;31m--- lib/AsmParser/LLParser.cpp	(revision 174812)[0;0m
+[1;34m+++ lib/AsmParser/LLParser.cpp	(revision 174813)[0;0m
+[1;35m@@ -233,7 +233,6 @@[0;0m
+[1;37m     case lltok::GlobalVar:  if (ParseNamedGlobal()) return true; break;[0;0m
+[1;37m     case lltok::exclaim:    if (ParseStandaloneMetadata()) return true; break;[0;0m
+[1;37m     case lltok::MetadataVar:if (ParseNamedMetadata()) return true; break;[0;0m
+[1;31m-    case lltok::AttrGrpID:  if (ParseUnnamedAttrGrp()) return true; break;[0;0m
+[1;37m [0;0m
+[1;37m     // The Global variable production with no name can have many different[0;0m
+[1;37m     // optional leading prefixes, the production is:[0;0m
+[1;35m@@ -279,6 +278,8 @@[0;0m
+[1;37m     case lltok::kw_global:        // GlobalType[0;0m
+[1;37m       if (ParseGlobal("", SMLoc(), 0, false, 0)) return true;[0;0m
+[1;37m       break;[0;0m
+[1;34m+[0;0m
+[1;34m+    case lltok::kw_attributes: if (ParseUnnamedAttrGrp()) return true; break;[0;0m
+[1;37m     }[0;0m
+[1;37m   }[0;0m
+[1;37m }[0;0m
+[1;35m@@ -800,16 +801,18 @@[0;0m
+[1;37m }[0;0m
+[1;37m [0;0m
+[1;37m /// ParseUnnamedAttrGrp[0;0m
+[1;31m-///   ::= AttrGrpID '=' '{' AttrValPair+ '}'[0;0m
+[1;34m+///   ::= 'attributes' AttrGrpID '=' '{' AttrValPair+ '}'[0;0m
+[1;37m bool LLParser::ParseUnnamedAttrGrp() {[0;0m
+[1;34m+  assert(Lex.getKind() == lltok::kw_attributes);[0;0m
+[1;34m+  LocTy AttrGrpLoc = Lex.getLoc();[0;0m
+[1;34m+  Lex.Lex();[0;0m
+[1;34m+[0;0m
+[1;37m   assert(Lex.getKind() == lltok::AttrGrpID);[0;0m
+[1;31m-  LocTy AttrGrpLoc = Lex.getLoc();[0;0m
+[1;37m   unsigned VarID = Lex.getUIntVal();[0;0m
+[1;37m   std::vector<unsigned> unused;[0;0m
+[1;37m   Lex.Lex();[0;0m
+[1;37m [0;0m
+[1;37m   if (ParseToken(lltok::equal, "expected '=' here") ||[0;0m
+[1;31m-      ParseToken(lltok::kw_attributes, "expected 'attributes' keyword here") ||[0;0m
+[1;37m       ParseToken(lltok::lbrace, "expected '{' here") ||[0;0m
+[1;37m       ParseFnAttributeValuePairs(NumberedAttrBuilders[VarID], unused, true) ||[0;0m
+[1;37m       ParseToken(lltok::rbrace, "expected end of attribute group"))[0;0m
+[1;37m[0;0m
+[1;31m------------------------------------------------------------------------[0;0m
+[1;37mr174812 | void | 2013-02-09 16:42:51 +0100 (Sat, 09 Feb 2013) | 4 lines[0;0m
+[1;37m[0;0m
+[1;37mAdd a DenseMapInfo class for the AttributeSet.[0;0m
+[1;37m[0;0m
+[1;37mWe are going to place the AttributeSet into a DenseMap during assembly writing.[0;0m
+[1;37m[0;0m
+[1;37m[0;0m
+[1;32mIndex: include/llvm/IR/Attributes.h[0;0m
+[1;32m===================================================================[0;0m
+[1;31m--- include/llvm/IR/Attributes.h	(revision 174811)[0;0m
+[1;34m+++ include/llvm/IR/Attributes.h	(revision 174812)[0;0m
+[1;35m@@ -185,6 +185,26 @@[0;0m
+[1;37m [0;0m
+[1;37m //===----------------------------------------------------------------------===//[0;0m
+[1;37m /// \class[0;0m
+[1;34m+/// \brief Provide DenseMapInfo for Attribute::AttrKinds. This is used by[0;0m
+[1;34m+/// AttrBuilder.[0;0m
+[1;34m+template<> struct DenseMapInfo<Attribute::AttrKind> {[0;0m
+[1;34m+  static inline Attribute::AttrKind getEmptyKey() {[0;0m
+[1;34m+    return Attribute::AttrKindEmptyKey;[0;0m
+[1;34m+  }[0;0m
+[1;34m+  static inline Attribute::AttrKind getTombstoneKey() {[0;0m
+[1;34m+    return Attribute::AttrKindTombstoneKey;[0;0m
+[1;34m+  }[0;0m
+[1;34m+  static unsigned getHashValue(const Attribute::AttrKind &Val) {[0;0m
+[1;34m+    return Val * 37U;[0;0m
+[1;34m+  }[0;0m
+[1;34m+  static bool isEqual(const Attribute::AttrKind &LHS,[0;0m
+[1;34m+                      const Attribute::AttrKind &RHS) {[0;0m
+[1;34m+    return LHS == RHS;[0;0m
+[1;34m+  }[0;0m
+[1;34m+};[0;0m
+[1;34m+[0;0m
+[1;34m+//===----------------------------------------------------------------------===//[0;0m
+[1;34m+/// \class[0;0m
+[1;37m /// \brief This class holds the attributes for a function, its return value, and[0;0m
+[1;37m /// its parameters. You access the attributes for each of them via an index into[0;0m
+[1;37m /// the AttributeSet object. The function attributes are at index[0;0m
+[1;35m@@ -200,6 +220,7 @@[0;0m
+[1;37m private:[0;0m
+[1;37m   friend class AttrBuilder;[0;0m
+[1;37m   friend class AttributeSetImpl;[0;0m
+[1;34m+  template <typename Ty> friend struct DenseMapInfo;[0;0m
+[1;37m [0;0m
+[1;37m   /// \brief The attributes that we are managing. This can be null to represent[0;0m
+[1;37m   /// the empty attributes list.[0;0m
+[1;35m@@ -339,22 +360,23 @@[0;0m
+[1;37m [0;0m
+[1;37m //===----------------------------------------------------------------------===//[0;0m
+[1;37m /// \class[0;0m
+[1;31m-/// \brief Provide DenseMapInfo for Attribute::AttrKinds. This is used by[0;0m
+[1;31m-/// AttrBuilder.[0;0m
+[1;31m-template<> struct DenseMapInfo<Attribute::AttrKind> {[0;0m
+[1;31m-  static inline Attribute::AttrKind getEmptyKey() {[0;0m
+[1;31m-    return Attribute::AttrKindEmptyKey;[0;0m
+[1;34m+/// \brief Provide DenseMapInfo for AttributeSet.[0;0m
+[1;34m+template<> struct DenseMapInfo<AttributeSet> {[0;0m
+[1;34m+  static inline AttributeSet getEmptyKey() {[0;0m
+[1;34m+    uintptr_t Val = static_cast<uintptr_t>(-1);[0;0m
+[1;34m+    Val <<= PointerLikeTypeTraits<void*>::NumLowBitsAvailable;[0;0m
+[1;34m+    return AttributeSet(reinterpret_cast<AttributeSetImpl*>(Val));[0;0m
+[1;37m   }[0;0m
+[1;31m-  static inline Attribute::AttrKind getTombstoneKey() {[0;0m
+[1;31m-    return Attribute::AttrKindTombstoneKey;[0;0m
+[1;34m+  static inline AttributeSet getTombstoneKey() {[0;0m
+[1;34m+    uintptr_t Val = static_cast<uintptr_t>(-2);[0;0m
+[1;34m+    Val <<= PointerLikeTypeTraits<void*>::NumLowBitsAvailable;[0;0m
+[1;34m+    return AttributeSet(reinterpret_cast<AttributeSetImpl*>(Val));[0;0m
+[1;37m   }[0;0m
+[1;31m-  static unsigned getHashValue(const Attribute::AttrKind &Val) {[0;0m
+[1;31m-    return Val * 37U;[0;0m
+[1;34m+  static unsigned getHashValue(AttributeSet AS) {[0;0m
+[1;34m+    return (unsigned((uintptr_t)AS.pImpl) >> 4) ^[0;0m
+[1;34m+           (unsigned((uintptr_t)AS.pImpl) >> 9);[0;0m
+[1;37m   }[0;0m
+[1;31m-  static bool isEqual(const Attribute::AttrKind &LHS,[0;0m
+[1;31m-                      const Attribute::AttrKind &RHS) {[0;0m
+[1;31m-    return LHS == RHS;[0;0m
+[1;31m-  }[0;0m
+[1;34m+  static bool isEqual(AttributeSet LHS, AttributeSet RHS) { return LHS == RHS; }[0;0m
+[1;37m };[0;0m
+[1;37m [0;0m
+[1;37m //===----------------------------------------------------------------------===//[0;0m
+[1;37m[0;0m
+[1;31m------------------------------------------------------------------------[0;0m

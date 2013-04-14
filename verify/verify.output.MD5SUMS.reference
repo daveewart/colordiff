@@ -1,11 +1,11 @@
 d93e601ad3aecb5e043d44358aa4079b  cvs.diff.output
 acf9f60eb73c45edb3a9ae78308212e3  cvs.diffc.diff.output
 07a1a9f620b72410c5160fa12ed0783c  cvs.diffu.diff.output
-eb1c0f56fe7da5c869dc304087a0ce67  cvs.diffy.diff.output
+0bdcd0deadfb287e228fae65235af19d  cvs.diffy.diff.output
 98584b9796cb241d1f4f8da74ff2defa  debdiff.diff.output
 4cb748850f6851ad288d97dbb331fe73  git.diffu.diff.output
 399b3e9b20272129f5c7300485193164  git-format-patch1.diffu.diff.output
-31939978bca38cbd8e8c102af604ad96  git-format-patch2.diffu.diff.output
+2c3d63466b0db91d8a5d4223caca813c  git-format-patch2.diffu.diff.output
 16d63808c43dc5407efa408e5e4bc867  p4.diff.output
 a5a56a5ed03b324197fedd0d4aa41a6b  p4.diffc.diff.output
 bf489d46b0f373d625adf9514114241d  p4.diffu.diff.output
@@ -14,5 +14,7 @@ bf489d46b0f373d625adf9514114241d  p4.diffu.diff.output
 fbf4ba1b6d195c5199c56e49a920143a  plain.diffc.diff.output
 1933f2a36c45a0b0ff284e0ea1bb701b  plain.diffu.diff.output
 fd7122cc597bd2f3d29a875971b6df8b  plain.diffy.diff.output
+09867f65533fd9957d575745e54c383f  sdiff-l.diff.output
 8f3b691cc27405ae43d89123fb35d99f  svn.diff.output
+068b94c5a435692a3c7991bf7d6cf834  svn.log.diff.output
 1d628b0a0f196787acf7ca1f930d1a46  wdiff1.diff.output

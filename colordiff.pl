@@ -108,54 +108,52 @@ sub check_for_file_arguments {
 
 sub detect_diff_type {
     # Two parameters:
-    #    $isref       is reference to @inputstream
+    #    $record      is line in which a diff format has to be detected
     #    $allow_diffy is flag indicating whether diffy is a
     #                   permitted diff type
-    my $isref = shift;
+    my $record = shift;
     my $allow_diffy = shift;
-    my @is = @$isref;
 
     # This may not be perfect - should identify most reasonably
     # formatted diffs and patches
 
-    foreach my $record (@is) {
-        # Unified diffs are the only flavour having '+++ ' or '--- '
-        # at the start of a line
-        if ($record =~ /^(\+\+\+ |--- |@@ )/) {
-            return 'diffu';
-        }
-        # Context diffs are the only flavour having '***'
-        # at the start of a line
-        elsif ($record =~ /^\*\*\*/) {
-            return 'diffc';
-        }
-        # Plain diffs have NcN, NdN and NaN etc.
-        elsif ($record =~ /^[0-9,]+[acd][0-9,]+$/) {
-            return 'diff';
-        }
-        # FIXME - This is not very specific, since the regex matches could
-        # easily match non-diff output.
-        # However, given that we have not yet matched any of the *other* diff
-        # types, this might be good enough
-        #
-        # Only pick diffy if our flag parameter indicates so
-        elsif ( ($allow_diffy == 1) && ($record =~ /(\s\|\s|\s<$|\s>\s)/) ) {
-            return 'diffy';
-        }
-        # wdiff deleted/added patterns
-        # should almost always be pairwise?
-        elsif ($record =~ /\[-.*?-\]/s
-                || $record =~ /\{\+.*?\+\}/s) {
-            return 'wdiff';
-        }
-        # FIXME - This is a bit risky, but if we haven't matched any other
-        # diff type by this stage, this line usually indicates we have
-        # debdiff output
-        elsif ($record =~ /^Control files: lines which differ/) {
-            return 'debdiff';
-        }
+    # Unified diffs are the only flavour having '+++ ' or '--- '
+    # at the start of a line
+    if ($record =~ /^(\+\+\+ |--- |@@ )/) {
+        return 'diffu';
     }
-    $diff_type = 'unknown';
+    # Context diffs are the only flavour having '***'
+    # at the start of a line
+    elsif ($record =~ /^\*\*\*/) {
+        return 'diffc';
+    }
+    # Plain diffs have NcN, NdN and NaN etc.
+    elsif ($record =~ /^[0-9,]+[acd][0-9,]+$/) {
+        return 'diff';
+    }
+    # FIXME - This is not very specific, since the regex matches could
+    # easily match non-diff output.
+    # However, given that we have not yet matched any of the *other* diff
+    # types, this might be good enough
+    #
+    # Only pick diffy if our flag parameter indicates so
+    elsif ( ($allow_diffy == 1) && ($record =~ /(\s\|\s|\s<$|\s>\s)/) ) {
+        return 'diffy';
+    }
+    # wdiff deleted/added patterns
+    # should almost always be pairwise?
+    elsif ($record =~ /\[-.*?-\]/s
+            || $record =~ /\{\+.*?\+\}/s) {
+        return 'wdiff';
+    }
+    # FIXME - This is a bit risky, but if we haven't matched any other
+    # diff type by this stage, this line usually indicates we have
+    # debdiff output
+    elsif ($record =~ /^Control files: lines which differ/) {
+        return 'debdiff';
+    }
+
+    return 'unknown';
 }
 
 my $enable_verifymode;
@@ -299,32 +297,35 @@ if (check_for_file_arguments (@ARGV)) {
 
 my @inputstream;
 
-my $exitcode = 0;
+my $pid;
 if ($operating_methodology == 1) {
-    # Run diff and then post-process the output
-    my $pid = open2(\*INPUTSTREAM, undef, "$diff_cmd", @ARGV);
-    @inputstream = <INPUTSTREAM>;
-    close INPUTSTREAM;
-    waitpid $pid, 0;
-    $exitcode=$? >> 8;
-}
-else {
-    # No need to call diff, just process standard input
-    @inputstream = <STDIN>;
+    # Feed stdin of colordiff with output from the diff program
+    close(STDIN);
+    $pid = open2(\*STDIN, undef, "$diff_cmd", @ARGV);
 }
 
 # Input stream has been read - need to examine it
 # to determine type of diff we have.
 
+my $lastline;
 my $record;
-my $longest_record = 0;
 
 if (defined $specified_difftype) {
     $diff_type = $specified_difftype;
+    # diffy needs at least one line to look at
+    if ($diff_type eq 'diffy' and ($_ = <STDIN>)) {
+        push @inputstream, $_;
+    }
+    $lastline = $_;
 }
 else {
     # Detect diff type, diffy is permitted
-    $diff_type = detect_diff_type(\@inputstream, 1);
+    while (<STDIN>) {
+        push @inputstream, $_;
+        $diff_type = detect_diff_type($_, 1);
+        last if $diff_type ne 'unknown';
+    }
+    $lastline = $_;
 }
 
 my $inside_file_old = 1;
@@ -335,36 +336,64 @@ my $inside_file_old = 1;
 # three columns where the first and third always consist of spaces and the
 # second consists only of spaces, '<', '>' and '|'
 # This is not a 100% certain match, but should be good enough
-
-my %separator_col  = ();
-my %candidate_col  = ();
 my $diffy_sep_col  = 0;
 my $mostlikely_sum = 0;
 
 if ($diff_type eq 'diffy') {
     # Not very elegant, but does the job
-    # Unfortunately requires parsing the input stream multiple times
-    foreach (@inputstream) {
-        $record = expand_tabs_to_spaces $_;
-        $longest_record = length ($record) if (length ($record) > $longest_record);
-    }
-    for (my $i = 0 ; $i <= $longest_record ; $i++) {
-        $separator_col{$i} = 1;
-        $candidate_col{$i} = 0;
-    }
 
-    foreach (@inputstream) {
+    my $longest_record = -1;
+    my %separator_col  = ();
+    my %candidate_col  = ();
+    my $possible_cols = 0;
+    my @checkbuffer;
+
+    (@checkbuffer, @inputstream) = (@inputstream, @checkbuffer);
+
+    while (@checkbuffer) {
+        $_ = shift @checkbuffer;
+        push @inputstream, $_;
         $_ = expand_tabs_to_spaces $_;
+
+        if (length ($_) > $longest_record) {
+            my $i = $longest_record + 1;
+
+            $longest_record = length ($_);
+            while ($i <= $longest_record) {
+                $separator_col{$i} = 1;
+                $candidate_col{$i} = 0;
+                $i++;
+            }
+        }
+
         for (my $i = 0 ; $i < (length ($_) - 2) ; $i++) {
-            next if (!defined $separator_col{$i});
             next if ($separator_col{$i} == 0);
+            next if ($_ =~ /^(Index: |={4,}|RCS file: |retrieving |diff )/);
             my $subsub = substr ($_, $i, 2);
-            if ($subsub !~ / [ |<>]/) {
+            if ($subsub !~ / [ (|<>]/) {
                 $separator_col{$i} = 0;
+                if ($candidate_col{$i} > 0) {
+                    $possible_cols--;
+                }
             }
             if ($subsub =~ / [|<>]/) {
                 $candidate_col{$i}++;
+                if ($candidate_col{$i} == 1) {
+                    $possible_cols++;
+                }
             }
+        }
+
+        if ( !@checkbuffer ) {
+            if (! (defined $specified_difftype) and
+                $possible_cols == 0 && detect_diff_type($_, 0) ne 'unknown') {
+                $diff_type = detect_diff_type($_, 0);
+                last;
+            }
+            if (defined ($_ = <STDIN>)) {
+                push @checkbuffer, $_;
+            }
+            $lastline = $_;
         }
     }
 
@@ -382,12 +411,15 @@ if ($diff_type eq 'diffy') {
     # as a possible outcome
     if ($diffy_sep_col == 0) {
         # Detect diff type, diffy is NOT permitted
-        $diff_type = detect_diff_type(\@inputstream, 0);
+        foreach (@inputstream) {
+            $diff_type = detect_diff_type($_, 0);
+            last if $diff_type ne 'unknown';
+        }
     }
 }
 # ------------------------------------------------------------------------------
 
-foreach (@inputstream) {
+while (defined( $_ = @inputstream ? shift @inputstream : ($lastline and <STDIN>) )) {
     if ($diff_type eq 'diff') {
         if (/^</) {
             print "$file_old";
@@ -473,6 +505,7 @@ foreach (@inputstream) {
     # Works with previously-identified column containing the diff-y
     # separator characters
     elsif ($diff_type eq 'diffy') {
+        $_ = expand_tabs_to_spaces $_;
         if (length ($_) > ($diffy_sep_col + 2)) {
             my $sepchars = substr ($_, $diffy_sep_col, 2);
             if ($sepchars eq ' <') {
@@ -505,6 +538,12 @@ foreach (@inputstream) {
     }
     s/$/$colour{off}/;
     print "$_";
+}
+
+my $exitcode = 0;
+if ($operating_methodology == 1) {
+    waitpid $pid, 0;
+    $exitcode=$? >> 8;
 }
 if (defined $enable_fakeexitcode) {
     exit 0;
