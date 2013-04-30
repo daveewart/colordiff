@@ -8,7 +8,7 @@ DIST_FILES=COPYING INSTALL Makefile README \
 TMPDIR=colordiff-${VERSION}
 TARBALL=${TMPDIR}.tar.gz
 
-
+.PHONY: doc
 doc: colordiff.xml cdiff.xml
 	xmlto -vv man colordiff.xml
 	xmlto -vv man cdiff.xml
@@ -19,6 +19,7 @@ doc: colordiff.xml cdiff.xml
 	perl -p -i -e 's#</body>#</div></body>#' colordiff.html
 	perl -p -i -e 's#<div class=\"refentry\"#<div id=\"content\"><div class=\"refentry\"#' colordiff.html
 
+.PHONY: install
 install:
 	install -d ${DESTDIR}${INSTALL_DIR}
 	sed -e "s%/etc%${ETC_DIR}%g" colordiff.pl > \
@@ -39,6 +40,7 @@ install:
 	-chown root.root ${DESTDIR}${ETC_DIR}/colordiffrc
 	chmod 644 ${DESTDIR}${ETC_DIR}/colordiffrc
 
+.PHONY: uninstall
 uninstall:
 	rm -f ${DESTDIR}${INSTALL_DIR}/colordiff
 	rm -f ${DESTDIR}${ETC_DIR}/colordiffrc
@@ -46,14 +48,17 @@ uninstall:
 	rm -f ${DESTDIR}${MAN_DIR}/colordiff.1
 	rm -f ${DESTDIR}${MAN_DIR}/cdiff.1
 
+.PHONY: dist
 dist:
 	mkdir ${TMPDIR}
 	cp -p ${DIST_FILES} ${TMPDIR}
 	tar -zcvf ${TARBALL} ${TMPDIR}
 	rm -fR ${TMPDIR}
 
+.PHONY: gitclean
 gitclean:
 	rm -f colordiff.1 colordiff.html cdiff.1
 
+.PHONY: clean
 clean:
 	rm -f README colordiff.1 colordiff.html cdiff.1
