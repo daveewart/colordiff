@@ -1,6 +1,6 @@
 prefix=/usr/local
 INSTALL_DIR=$(prefix)/bin
-MAN_DIR=$(prefix)/man/man1
+MAN_DIR=$(prefix)/share/man/man1
 ETC_DIR=$(prefix)/etc
 VERSION=$(shell egrep '^my .version' colordiff.pl |cut -f 2 -d "'")
 DIST_FILES=COPYING INSTALL Makefile README \
