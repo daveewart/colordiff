@@ -1,7 +1,7 @@
-PREFIX ?= /
-INSTALL_DIR=$(PREFIX)/usr/local/bin
-MAN_DIR=$(PREFIX)/usr/local/man/man1
-ETC_DIR=$(PREFIX)/etc
+prefix=/usr/local
+INSTALL_DIR=$(prefix)/bin
+MAN_DIR=$(prefix)/man/man1
+ETC_DIR=$(prefix)/etc
 VERSION=$(shell egrep '^my .version' colordiff.pl |cut -f 2 -d "'")
 DIST_FILES=COPYING INSTALL Makefile README \
 	colordiff.pl colordiffrc colordiffrc-lightbg cdiff.sh BUGS CHANGES colordiff.1 \
