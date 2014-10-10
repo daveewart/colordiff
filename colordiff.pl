@@ -158,12 +158,14 @@ sub detect_diff_type {
 my $enable_verifymode;
 my $specified_difftype;
 my $enable_fakeexitcode;
+my $disable_plusminus;
 my $color_mode = "auto";
 GetOptions(
     # --enable-verifymode option is for testing behaviour of colordiff
     # against standard test diffs
     "verifymode" => \$enable_verifymode,
     "fakeexitcode" => \$enable_fakeexitcode,
+    "noplusminus" => \$disable_plusminus,
     "difftype=s" => \$specified_difftype,
     "color=s" => \$color_mode
     # TODO - check that specified type is valid, issue warning if not
@@ -490,12 +492,15 @@ while (defined( $_ = @inputstream ? shift @inputstream : ($lastline and <$inputh
     elsif ($diff_type eq 'diffu') {
         if (/^-/) {
             print "$file_old";
+            $_ =~ s/^.// if (defined $disable_plusminus);
         }
         elsif (/^\+/) {
             print "$file_new";
+            $_ =~ s/^.// if (defined $disable_plusminus);
         }
         elsif (/^\@/) {
             print "$diff_stuff";
+            $_ =~ s/^.// if (defined $disable_plusminus);
         }
         elsif (/^Only in/) {
             print "$diff_stuff";
@@ -505,6 +510,7 @@ while (defined( $_ = @inputstream ? shift @inputstream : ($lastline and <$inputh
         }
         else {
             print "$plain_text";
+            $_ =~ s/^.// if (defined $disable_plusminus);
         }
     }
     # Works with previously-identified column containing the diff-y
