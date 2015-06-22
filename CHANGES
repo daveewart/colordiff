@@ -119,6 +119,12 @@ arguments better.  Plus code refactoring, corrections to docs.
 
 Changes between version 1.0.13 and 1.0.14
 
+Big improvements to side-by-side diff detection, thanks Peter Wu.  Additional
+colordiffrc example colour scheme file to match 'git diff'.  Misc fixes thanks
+to John Szakmeister, Matthew Wang.
+
+Changes between version 1.0.14 and 1.0.15
+
 Add 'difffile' color option, allowing more git-like coloring (separate color for
 header of each changed file).
 

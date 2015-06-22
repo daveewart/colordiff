@@ -1,4 +1,5 @@
-# Example colordiffrc file for dark backgrounds
+# Example colordiffrc file for dark backgrounds with colour
+# defaults set to match 'git diff'
 #
 # Set banner=no to suppress authorship info at top of
 # colordiff output
@@ -26,5 +27,4 @@ plain=off
 newtext=darkgreen
 oldtext=darkred
 diffstuff=darkcyan
-cvsstuff=cyan
-difffile=white
+cvsstuff=white

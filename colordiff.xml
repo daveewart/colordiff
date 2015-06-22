@@ -94,6 +94,16 @@ $ diff -u file1 file2 | colordiff | less -R
 
 </para>
 
+<para>If you want to force disable colour escape sequences (for example
+pipe the output to <command>patch</command>), you can use option 
+'--color=no' to do so:
+
+<screen>
+$ diff -u file1 file2 | colordiff --color=no | patch -p0 -d another-working-dir
+</screen>
+
+</para>
+
 <para>If you have <command>wdiff</command> installed, colordiff will correctly
 colourise the added and removed text, provided that the '-n' option is given to
 <command>wdiff</command>:
@@ -145,6 +155,17 @@ function cvsdiff () { cvs diff $@ | colordiff |less -R; }
 
 <para>Note that the function name, cvsdiff, can be customized.</para>
 
+<para>By default colordiff returns the exit code of the underlying diff
+invocation (if there is one), but there are some circumstances where it is
+useful to force colordiff's exit code to be zero: to do this use the option
+'--fakeexitcode':
+
+<screen>
+colordiff --fakeexitcode ...
+</screen>
+
+</para>
+
 </refsect1>
 
 <refsect1 id='files'><title>Files</title>
@@ -157,7 +178,11 @@ function cvsdiff () { cvs diff $@ | colordiff |less -R; }
   <varlistentry><term><filename>colordiffrc-lightbg</filename></term>
   <listitem><para>Alternate configuration template for use with terminals having
   light backgrounds.  Copy this to /etc/colordiffrc or ~/.colordiffrc and
-  customize.</para></listitem>
+  customize.</para></listitem></varlistentry>
+  <varlistentry><term><filename>colordiffrc-gitdiff</filename></term>
+  <listitem><para>Alternate configuration template for use with terminals having
+  dark backgrounds, with colour defaults set to match the output of 'git diff'.
+  Copy this to /etc/colordiffrc or ~/.colordiffrc and customize.</para></listitem>
 </varlistentry></variablelist>
 
 </refsect1>
