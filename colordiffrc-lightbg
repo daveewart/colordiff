@@ -27,3 +27,4 @@ newtext=blue
 oldtext=red
 diffstuff=darkgreen
 cvsstuff=darkmagenta
+difffile=darkyellow

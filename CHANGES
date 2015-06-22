@@ -117,5 +117,9 @@ Changes between version 1.0.12 and 1.0.13
 Avoid accidentally identifying some diffs as side-by-side, handling colordiff
 arguments better.  Plus code refactoring, corrections to docs.
 
-# vim: tw=72
+Changes between version 1.0.13 and 1.0.14
 
+Add 'difffile' color option, allowing more git-like coloring (separate color for
+header of each changed file).
+
+# vim: tw=72
