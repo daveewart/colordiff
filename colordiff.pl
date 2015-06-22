@@ -60,6 +60,7 @@ my $plain_text = $colour{white};
 my $file_old   = $colour{red};
 my $file_new   = $colour{blue};
 my $diff_stuff = $colour{magenta};
+my $diff_file  = $diff_stuff;
 my $cvs_stuff  = $colour{green};
 
 # Locations for personal and system-wide colour configurations
@@ -242,6 +243,9 @@ foreach $config_file (@config_files) {
             elsif ($setting eq 'diffstuff') {
                 $diff_stuff = $colourval;
             }
+            elsif ($setting eq 'difffile') {
+                $diff_file = $colourval;
+            }
             elsif ($setting eq 'cvsstuff') {
                 $cvs_stuff = $colourval;
             }
@@ -259,6 +263,7 @@ if ((-f STDOUT) && ($color_patch == 0)) {
     $plain_text  = '';
     $file_old    = '';
     $file_new    = '';
+    $diff_file   = '';
     $diff_stuff  = '';
     $cvs_stuff   = '';
     $plain_text  = '';
@@ -386,7 +391,7 @@ foreach (@inputstream) {
             print "$cvs_stuff";
         }
         elsif (/^Only in/) {
-            print "$diff_stuff";
+            print "$diff_file";
         }
         else {
             print "$plain_text";
@@ -400,20 +405,20 @@ foreach (@inputstream) {
             print "$file_new";
         }
         elsif (/^\*{4,}/) {
-            print "$diff_stuff";
+            print "$diff_file";
         }
         elsif (/^Only in/) {
-            print "$diff_stuff";
+            print "$diff_file";
         }
         elsif (/^\*\*\* [0-9]+,[0-9]+/) {
-            print "$diff_stuff";
+            print "$diff_file";
             $inside_file_old = 1;
         }
         elsif (/^\*\*\* /) {
             print "$file_old";
         }
         elsif (/^--- [0-9]+,[0-9]+/) {
-            print "$diff_stuff";
+            print "$diff_file";
             $inside_file_old = 0;
         }
         elsif (/^--- /) {
@@ -435,7 +440,10 @@ foreach (@inputstream) {
         }
     }
     elsif ($diff_type eq 'diffu') {
-        if (/^-/) {
+        if (/^(---|\+\+\+) /) {
+            print "$diff_file";
+        }
+        elsif (/^-/) {
             print "$file_old";
         }
         elsif (/^\+/) {
@@ -445,7 +453,7 @@ foreach (@inputstream) {
             print "$diff_stuff";
         }
         elsif (/^Only in/) {
-            print "$diff_stuff";
+            print "$diff_file";
         }
         elsif (/^(Index: |={4,}|RCS file: |retrieving |diff )/) {
             print "$cvs_stuff";
@@ -473,7 +481,7 @@ foreach (@inputstream) {
             }
         }
         elsif (/^Only in/) {
-            print "$diff_stuff";
+            print "$diff_file";
         }
         else {
             print "$plain_text";
