@@ -2,7 +2,7 @@
 
 # cdiff.sh - Convenience wrapper for colordiff
 #
-# Copyright (C) 2003-2009 Ville Skyttä <ville.skytta@iki.fi>
+# Copyright (C) 2003-2015 Ville Skyttä <ville.skytta@iki.fi>
 # Based on cdiff version 1.4 by eivind@FreeBSD.org
 #
 # This program is free software; you can redistribute it and/or
@@ -30,15 +30,15 @@
         case `echo "$file" | perl -ne 'print lc $_'` in
         http:*|https:*|ftp:*)
             if [ -z "$CDIFF_FETCH" ]; then
-                if which curl >/dev/null 2>&1; then
+                if type curl >/dev/null 2>&1; then
                     CDIFF_FETCH="curl -s"
-                elif which wget >/dev/null 2>&1; then
+                elif type wget >/dev/null 2>&1; then
                     CDIFF_FETCH="wget -e timestamping=off -qO -"
-                elif which lwp-request >/dev/null 2>&1; then
+                elif type lwp-request >/dev/null 2>&1; then
                     CDIFF_FETCH="lwp-request -m GET"
-                elif which lynx >/dev/null 2>&1; then
+                elif type lynx >/dev/null 2>&1; then
                     CDIFF_FETCH="lynx -source"
-                elif which elinks >/dev/null 2>&1; then
+                elif type elinks >/dev/null 2>&1; then
                     CDIFF_FETCH="elinks -source"
                 fi
                 if [ -z "$CDIFF_FETCH" ]; then

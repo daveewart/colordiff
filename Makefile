@@ -4,7 +4,7 @@ ETC_DIR=/etc
 VERSION=$(shell egrep '^my .version' colordiff.pl |cut -f 2 -d "'")
 DIST_FILES=COPYING INSTALL Makefile README \
 	colordiff.pl colordiffrc colordiffrc-lightbg cdiff.sh BUGS CHANGES colordiff.1 \
-	colordiff.xml cdiff.xml cdiff.1
+	colordiff.xml cdiff.xml cdiff.1 colordiffrc-gitdiff
 TMPDIR=colordiff-${VERSION}
 TARBALL=${TMPDIR}.tar.gz
 
