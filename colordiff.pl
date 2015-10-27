@@ -274,7 +274,7 @@ if ($color_mode eq "yes") {
 # If output is to a file, switch off colours, unless 'color_patch' is set,
 # which might be due to --color=no being specified
 # Relates to http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=378563
-if ((-f STDOUT) && ($color_patch == 0)) {
+if ((!-t STDOUT) && ($color_patch == 0)) {
     $plain_text  = '';
     $file_old    = '';
     $file_new    = '';
