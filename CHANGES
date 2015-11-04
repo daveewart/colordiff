@@ -127,7 +127,12 @@ Changes between 1.0.14 and 1.0.15
 
 Missed gitdiff file from tarball, bumping version number for clarity.
 
-Changes for 1.0.16
+Changes between 1.0.15 and 1.0.16
+
+Support for XDG_CONFIG_HOME (thanks Zhiming Wang), fewer deps for cdiff.sh and
+fixes for diffy and diff-type specification (thanks Peter Wu).
+
+Changes between 1.0.16 and 1.0.17
 
 Add 'difffile' color option, allowing more git-like coloring (separate color for
 header of each changed file).
