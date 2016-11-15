@@ -164,12 +164,14 @@ sub detect_diff_type {
 my $enable_verifymode;
 my $specified_difftype;
 my $enable_fakeexitcode;
+my $enable_detectterm;
 my $color_mode = "auto";
 GetOptions(
     # --enable-verifymode option is for testing behaviour of colordiff
     # against standard test diffs
     "verifymode" => \$enable_verifymode,
     "fakeexitcode" => \$enable_fakeexitcode,
+    "detectterm" => \$enable_detectterm,
     "difftype=s" => \$specified_difftype,
     "color=s" => \$color_mode
 );
@@ -274,7 +276,8 @@ if ($color_mode eq "yes") {
 # If output is to a file, switch off colours, unless 'color_patch' is set,
 # which might be due to --color=no being specified
 # Relates to http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=378563
-if ((-f STDOUT) && ($color_patch == 0)) {
+# if --detectterm is present in cmd line check if output is terminal device instead
+if (($enable_detectterm && !-t STDOUT || !$enable_detectterm && -f STDOUT) && ($color_patch == 0)) {
     $plain_text  = '';
     $file_old    = '';
     $file_new    = '';
