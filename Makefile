@@ -22,23 +22,23 @@ doc: colordiff.xml cdiff.xml
 .PHONY: install
 install:
 	install -d ${DESTDIR}${INSTALL_DIR}
-	sed -e "s%/etc%${ETC_DIR}%g" colordiff.pl > \
+	install -m 0755 colordiff.pl ${DESTDIR}${INSTALL_DIR}/colordiff
+	perl -p -i -e "s%/etc%${DESTDIR}${ETC_DIR}%g" \
 	  ${DESTDIR}${INSTALL_DIR}/colordiff
-	chmod +x ${DESTDIR}${INSTALL_DIR}/colordiff
-	if [ ! -f ${DESTDIR}${INSTALL_DIR}/cdiff ] ; then \
-	  install cdiff.sh ${DESTDIR}${INSTALL_DIR}/cdiff; \
+	install -m 0755 cdiff.sh ${DESTDIR}${INSTALL_DIR}/cdiff
+	install -d ${DESTDIR}${MAN_DIR}
+	if [ -f colordiff.1 ]; then \
+	  install -m 0644 colordiff.1 ${DESTDIR}${MAN_DIR}/colordiff.1; \
 	fi
-	install -Dm 644 colordiff.1 ${DESTDIR}${MAN_DIR}/colordiff.1
-	install -Dm 644 cdiff.1 ${DESTDIR}${MAN_DIR}/cdiff.1
+	if [ -f cdiff.1 ]; then \
+	  install -m 0644 cdiff.1 ${DESTDIR}${MAN_DIR}/cdiff.1; \
+	fi
+	install -d ${DESTDIR}${ETC_DIR};
 	if [ -f ${DESTDIR}${ETC_DIR}/colordiffrc ]; then \
 	  mv -f ${DESTDIR}${ETC_DIR}/colordiffrc \
 	    ${DESTDIR}${ETC_DIR}/colordiffrc.old; \
-	else \
-	  install -d ${DESTDIR}${ETC_DIR}; \
 	fi
-	cp colordiffrc ${DESTDIR}${ETC_DIR}/colordiffrc
-	-chown root.root ${DESTDIR}${ETC_DIR}/colordiffrc
-	chmod 644 ${DESTDIR}${ETC_DIR}/colordiffrc
+	install -m 0644 colordiffrc ${DESTDIR}${ETC_DIR}/colordiffrc
 
 .PHONY: uninstall
 uninstall:
