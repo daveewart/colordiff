@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 
 ########################################################################
 #                                                                      #
@@ -22,6 +22,7 @@
 ########################################################################
 
 use strict;
+use warnings;
 use Getopt::Long qw(:config pass_through no_auto_abbrev);
 
 my $app_name     = 'colordiff';
