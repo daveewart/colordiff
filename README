@@ -75,6 +75,10 @@ function cvsdiff () { cvs diff $@ | colordiff |less -R; }
 
 Note that the function name, cvsdiff, can be customized.
 
+When option '--noplusminus' is used with unified diffs, the added space,
+plus or minus character will be removed from the diff output. Use this for
+your convenience when you would like to copy-paste multiple lines.
+
 By default colordiff returns the exit code of the underlying diff invocation
 (if there is one), but there are some circumstances where it is useful to force
 colordiff's exit code to be zero: to do this use the option '--fakeexitcode':
