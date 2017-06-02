@@ -5,7 +5,7 @@
 # ColorDiff - a wrapper/replacement for 'diff' producing               #
 #             colourful output                                         #
 #                                                                      #
-# Copyright (C)2002-2015 Dave Ewart (davee@sungate.co.uk)              #
+# Copyright (C)2002-2017 Dave Ewart (davee@sungate.co.uk)              #
 #                                                                      #
 ########################################################################
 #                                                                      #
@@ -25,13 +25,13 @@ use strict;
 use Getopt::Long qw(:config pass_through no_auto_abbrev);
 
 my $app_name     = 'colordiff';
-my $version      = '1.0.16';
+my $version      = '1.0.17';
 my $author       = 'Dave Ewart';
 my $author_email = 'davee@sungate.co.uk';
 my $app_www      = 'http://www.colordiff.org/';
-my $copyright    = '(C)2002-2015';
+my $copyright    = '(C)2002-2017';
 my $show_banner  = 1;
-my $color_patch  = 0;
+my $color_patch  = undef;
 my $diff_cmd     = "diff";
 
 # ANSI sequences for colours
@@ -93,7 +93,7 @@ sub check_for_file_arguments {
     my $nonopts = 0;
     my $ddash = 0;
 
-    while (my $arg = shift) {
+    while (defined(my $arg = shift)) {
         if ($arg eq "--") {
             $ddash = 1;
             next;
@@ -166,13 +166,15 @@ my $enable_verifymode;
 my $specified_difftype;
 my $enable_fakeexitcode;
 my $color_mode = "auto";
+my $color_term_output_only = "no";
 GetOptions(
     # --enable-verifymode option is for testing behaviour of colordiff
     # against standard test diffs
     "verifymode" => \$enable_verifymode,
     "fakeexitcode" => \$enable_fakeexitcode,
     "difftype=s" => \$specified_difftype,
-    "color=s" => \$color_mode
+    "color=s" => \$color_mode,
+    "color-term-output-only=s" => \$color_term_output_only
 );
 
 $_ = $specified_difftype;
@@ -211,6 +213,8 @@ foreach $config_file (@config_files) {
             if ($setting eq 'color_patches') {
                 if ($value eq 'yes') {
                     $color_patch = 1;
+                } elsif ($value eq 'no') {
+                    $color_patch = 0;
                 }
                 next;
             }
@@ -268,17 +272,21 @@ foreach $config_file (@config_files) {
     }
 }
 
-# --color=yes and --color=no will override the color_patches setting
+# --color=(yes|no|auto) will override the color_patches setting
 if ($color_mode eq "yes") {
     $color_patch = 1;
 } elsif ($color_mode eq "no") {
     $color_patch = 0;
+} elsif ($color_mode eq "auto") {
+    $color_patch = undef;
 }
 
-# If output is to a file, switch off colours, unless 'color_patch' is set,
-# which might be due to --color=no being specified
+# If output is to a file, switch off colours unless overriden by $color_patch.
 # Relates to http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=378563
-if ((-f STDOUT) && ($color_patch == 0)) {
+# Relates to http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=862878
+if ( (!$color_patch && (defined $color_patch || -f STDOUT)) ||
+     ($color_term_output_only && !-t STDOUT) )
+{
     $plain_text  = '';
     $file_old    = '';
     $file_new    = '';

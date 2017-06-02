@@ -134,6 +134,9 @@ fixes for diffy and diff-type specification (thanks Peter Wu).
 
 Changes between 1.0.16 and 1.0.17
 
+Ensure --color=no is honoured where appropriate, add --color-term-output-only
+plus minor fixes.
+
 Add 'difffile' color option, allowing more git-like coloring (separate color for
 header of each changed file).
 
