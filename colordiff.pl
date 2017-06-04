@@ -25,7 +25,7 @@ use strict;
 use Getopt::Long qw(:config pass_through no_auto_abbrev);
 
 my $app_name     = 'colordiff';
-my $version      = '1.0.17';
+my $version      = '1.0.18';
 my $author       = 'Dave Ewart';
 my $author_email = 'davee@sungate.co.uk';
 my $app_www      = 'http://www.colordiff.org/';
@@ -285,7 +285,7 @@ if ($color_mode eq "yes") {
 # Relates to http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=378563
 # Relates to http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=862878
 if ( (!$color_patch && (defined $color_patch || -f STDOUT)) ||
-     ($color_term_output_only && !-t STDOUT) )
+     ($color_term_output_only eq 'yes' && !-t STDOUT) )
 {
     $plain_text  = '';
     $file_old    = '';
