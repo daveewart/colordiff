@@ -28,3 +28,4 @@ newtext=darkgreen
 oldtext=darkred
 diffstuff=darkcyan
 cvsstuff=white
+difffile=white
