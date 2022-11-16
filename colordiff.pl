@@ -23,6 +23,7 @@
 
 use warnings;
 use strict;
+use open qw( :std :encoding(UTF-8) );
 use Getopt::Long qw(:config pass_through no_auto_abbrev);
 
 my $app_name     = 'colordiff';
@@ -92,16 +93,44 @@ my $config_file;
 my $diff_type = 'unknown';
 
 # Convert tabs to spaces
+if   ( eval "use Text::VisualWidth::PP; 1" )
+     { eval q{ sub _width  { return Text::VisualWidth::PP::width($_[0]) } } }
+else { eval q{ sub _width  { return my $offs = () = /\PM/g } } }
+
+our $tabstop = 8;
+
 sub expand_tabs_to_spaces ($) {
-    my ($s) = @_;
-    while ((my $i = index ($s, "\t")) > -1) {
-        substr (
-            $s, $i, 1,    # range to replace
-            (' ' x (8 - ($i % 8))),    # string to replace with
-            );
-    }
-    $s;
+        my @l;
+        my $pad;
+        for ( @_ ) {
+                defined or do { push @l, ''; next };
+                my $s = '';
+                for (split(/^/m, $_, -1)) {
+                        my $offs;
+                        for (split(/\t/, $_, -1)) {
+                                if (defined $offs) {
+                                        $pad = $tabstop - $offs % $tabstop;
+                                        $s .= " " x $pad;
+                                }
+                                $s .= $_;
+                                $offs = _width($_);
+                        }
+                }
+                push(@l, $s);
+        }
+        return @l if wantarray;
+        return $l[0];
 }
+
+sub _substr {
+    my ( $str, $offset, $length ) = @_;
+    my $s = '';
+
+    while ( do { my $width = _width($str); $offset && $width && $width >= $offset } ) { $str =~ s/^(\X)//; $offset -= _width($1) }
+    while ( do { my $width = _width($str); $length && $width && $width >= $length } ) { $str =~ s/^(\X)//; $length -= _width($1); $s .= $1 }
+    return $s;
+}
+
 
 sub check_for_file_arguments {
     my $nonopts = 0;
@@ -466,7 +495,7 @@ if ($diff_type eq 'diffy') {
         for (my $i = 0 ; $i < (length ($_) - 2) ; $i++) {
             next if ($separator_col{$i} == 0);
             next if ($_ =~ /^(Index: |={4,}|RCS file: |retrieving |diff )/);
-            my $subsub = substr ($_, $i, 2);
+            my $subsub = _substr ($_, $i, 2);
             if ($subsub !~ / [ (|<>]/) {
                 $separator_col{$i} = 0;
                 if ($candidate_col{$i} > 0) {
