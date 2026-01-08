@@ -548,7 +548,7 @@ if ($diff_type eq 'diffy') {
 my $count_marks = 1;
 
 while (defined( $_ = @inputstream ? shift @inputstream : ($lastline and <$inputhandle>) )) {
-    if (/^Binary files (.*) and (.*) differ$/) {
+    if (($diffy_sep_col == 0) && (/^Binary files (.*) and (.*) differ$/)) {
         print "Binary files $file_old$1$plain_text and $file_new$2$plain_text differ$colour{off}\n";
         next;
     }
