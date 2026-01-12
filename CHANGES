@@ -159,4 +159,8 @@ Changes between 1.0.20 and 1.0.21
 Support for Windows C:\ProgramData instead of /etc, improved documentation for
 command-line options.
 
+Changes between 1.0.21 and 1.0.22
+
+Various improvements for side-by-side diffs and binary comparisons.
+
 # vim: tw=72
