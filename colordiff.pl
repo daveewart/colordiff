@@ -26,11 +26,11 @@ use strict;
 use Getopt::Long qw(:config pass_through no_auto_abbrev);
 
 my $app_name     = 'colordiff';
-my $version      = '1.0.21';
+my $version      = '1.0.22';
 my $author       = 'Dave Ewart';
 my $author_email = 'davee@sungate.co.uk';
 my $app_www      = 'http://www.colordiff.org/';
-my $copyright    = '(C)2002-2022';
+my $copyright    = '(C)2002-2026';
 my $show_banner  = 1;
 my $diff_cmd     = "diff";
 
