@@ -621,11 +621,14 @@ while (defined( $_ = @inputstream ? shift @inputstream : ($lastline and <$inputh
         elsif (/^([-\+ ]{$count_marks})/) {
             my $diff_marks = $1;
             if ($diff_marks =~ /-/) {
-                print $file_old;
+                print "$file_old";
             }
             elsif ($diff_marks =~ /\+/) {
-                print $file_new;
+                print "$file_new";
             }
+	    else {
+                print "$plain_text";
+	    }
         }
         elsif (/^(\@+)/) {
             $count_marks = length($1) - 1;
